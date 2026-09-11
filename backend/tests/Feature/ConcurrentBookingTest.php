@@ -23,6 +23,8 @@ class ConcurrentBookingTest extends TestCase
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
         
+        \Illuminate\Support\Facades\Queue::fake();
+        
         // Start two processes that hit the booking endpoint at the same time
         // Alternatively, since PHPUnit is single-threaded, we can just write the test logic manually using DB facade
         // But to make it a real test, let's use parallel execution if possible, or simulate it.
