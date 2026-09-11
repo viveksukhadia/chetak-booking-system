@@ -21,7 +21,7 @@ export default function ProductList() {
     queryKey: ['products'],
     queryFn: async () => {
       const response = await api.get('/products');
-      return response.data as Product[];
+      return response.data.data as Product[];
     }
   });
 
