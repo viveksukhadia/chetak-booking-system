@@ -7,6 +7,9 @@ interface Product {
   id: number;
   name: string;
   stock: number;
+  description?: string;
+  price?: number;
+  image_url?: string;
 }
 
 export default function ProductList() {
@@ -134,13 +137,36 @@ export default function ProductList() {
         ) : (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {products?.map((product) => (
-              <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
-                <div className="p-6">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-brand-600 transition-colors">{product.name}</h3>
+              <div key={product.id} className="bg-white flex flex-col rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
+                {product.image_url ? (
+                  <div className="relative w-full h-48 bg-gray-200 overflow-hidden">
+                    <img 
+                      src={product.image_url} 
+                      alt={product.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-48 bg-brand-50 flex items-center justify-center">
+                    <Package className="h-12 w-12 text-brand-200" />
+                  </div>
+                )}
+                
+                <div className="p-6 flex flex-col flex-grow">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-brand-600 transition-colors">{product.name}</h3>
+                    {product.price && (
+                      <span className="text-lg font-bold text-brand-600">${product.price}</span>
+                    )}
                   </div>
                   
-                  <div className="mt-4 flex items-center">
+                  {product.description && (
+                    <p className="text-gray-500 text-sm mb-4 line-clamp-2 flex-grow">
+                      {product.description}
+                    </p>
+                  )}
+                  
+                  <div className="mt-auto flex items-center mb-6">
                     <span className="text-sm text-gray-500 mr-2">Current Stock:</span>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {product.stock > 0 ? `${product.stock} available` : 'Out of stock'}
@@ -150,7 +176,7 @@ export default function ProductList() {
                   <button
                     onClick={() => handleBook(product.id)}
                     disabled={product.stock <= 0 || bookMutation.isPending}
-                    className="mt-6 w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+                    className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
                   >
                     <ShoppingCart className="mr-2 h-5 w-5" />
                     {bookMutation.isPending && bookMutation.variables?.productId === product.id ? 'Booking...' : 'Book Now'}
