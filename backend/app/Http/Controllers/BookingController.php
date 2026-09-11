@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Order;
 use App\Jobs\ProcessPaymentJob;
+use App\Http\Requests\BookProductRequest;
+use App\Http\Resources\ProductResource;
+use App\Http\Resources\OrderResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,16 +15,13 @@ class BookingController extends Controller
 {
     public function index()
     {
-        return Product::all();
+        return ProductResource::collection(Product::all());
     }
 
-    public function book(Request $request, $id)
+    public function book(BookProductRequest $request, $id)
     {
-        $request->validate([
-            'quantity' => 'required|integer|min:1'
-        ]);
-
-        $quantity = $request->input('quantity');
+        // Validation is automatically handled by BookProductRequest
+        $quantity = $request->validated('quantity');
 
         try {
             // DB::transaction automatically wraps the logic in a transaction
@@ -55,7 +55,7 @@ class BookingController extends Controller
 
             return response()->json([
                 'message' => 'Booking successful. Payment is processing.',
-                'order' => $order
+                'order' => new OrderResource($order)
             ], 201);
 
         } catch (\Exception $e) {
