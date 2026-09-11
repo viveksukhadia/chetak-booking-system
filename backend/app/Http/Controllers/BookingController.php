@@ -18,6 +18,12 @@ class BookingController extends Controller
         return ProductResource::collection(Product::all());
     }
 
+    public function orders(Request $request)
+    {
+        $orders = $request->user()->orders()->with('product')->latest()->get();
+        return OrderResource::collection($orders);
+    }
+
     public function book(BookProductRequest $request, $id)
     {
         // Validation is automatically handled by BookProductRequest

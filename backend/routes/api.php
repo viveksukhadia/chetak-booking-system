@@ -12,4 +12,5 @@ Route::get('/products', [BookingController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/v1/products/{id}/book', [BookingController::class, 'book']);
+    Route::get('/v1/orders', [BookingController::class, 'orders']);
 });

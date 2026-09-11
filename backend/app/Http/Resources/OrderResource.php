@@ -21,6 +21,7 @@ class OrderResource extends JsonResource
             'quantity' => $this->quantity,
             'status' => $this->status,
             'created_at' => $this->created_at,
+            'product' => new ProductResource($this->whenLoaded('product')),
         ];
     }
 }

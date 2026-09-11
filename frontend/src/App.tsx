@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import ProductList from './components/ProductList';
+import OrderList from './components/OrderList';
+import Layout from './components/Layout';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -15,7 +17,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     );
   }
   
-  return user ? <>{children}</> : <Navigate to="/login" />;
+  return user ? <Layout>{children}</Layout> : <Navigate to="/login" />;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -43,6 +45,11 @@ function App() {
       <Route path="/" element={
         <PrivateRoute>
           <ProductList />
+        </PrivateRoute>
+      } />
+      <Route path="/orders" element={
+        <PrivateRoute>
+          <OrderList />
         </PrivateRoute>
       } />
     </Routes>
