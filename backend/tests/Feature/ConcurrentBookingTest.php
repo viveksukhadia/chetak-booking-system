@@ -4,37 +4,66 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Tests\TestCase;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Process;
 
 class ConcurrentBookingTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
 
     public function test_concurrent_booking_prevents_overselling()
     {
-        // We will test this by simulating a race condition
-        // However, a true HTTP concurrent request test in PHPUnit requires parallel processes
-        // Let's simulate concurrent transactions locally
+        // 1. Setup Data
+        $product = Product::create(['name' => 'Limited Edition Item', 'stock' => 5]);
+        $users = User::factory()->count(10)->create();
         
-        $product = Product::create(['name' => 'Test Product', 'stock' => 5]);
-        $user1 = User::factory()->create();
-        $user2 = User::factory()->create();
-        
-        \Illuminate\Support\Facades\Queue::fake();
-        
-        // Start two processes that hit the booking endpoint at the same time
-        // Alternatively, since PHPUnit is single-threaded, we can just write the test logic manually using DB facade
-        // But to make it a real test, let's use parallel execution if possible, or simulate it.
+        Queue::fake(); // Prevent mock payment job from restoring stock during the test
 
-        $this->actingAs($user1)->postJson("/api/v1/products/{$product->id}/book", ['quantity' => 3])
-            ->assertStatus(201);
-            
-        $this->actingAs($user2)->postJson("/api/v1/products/{$product->id}/book", ['quantity' => 3])
-            ->assertStatus(422); // Second request should fail since 5 - 3 = 2, and 2 < 3.
+        // =========================================================================
+        // GENUINE PARALLEL CONCURRENCY TEST 
+        // =========================================================================
+        // We use Process::pool to spawn 10 separate OS-level PHP processes simultaneously.
+        // Each process executes the `app:concurrent-book` artisan command.
+        // Since we configured phpunit to use a physical `testing.sqlite` database rather 
+        // than an isolated `:memory:` DB, all 10 processes will hit the exact same 
+        // physical database file concurrently, triggering real database locks.
+        
+        // Set environment variable for child processes to inherit
+        putenv('DB_DATABASE=' . database_path('testing.sqlite'));
 
-        $this->assertEquals(2, $product->fresh()->stock);
+        $processes = [];
+        // Start all processes concurrently
+        foreach ($users as $user) {
+            $processes[] = Process::command("php artisan app:concurrent-book {$user->id} {$product->id} 1")->start();
+        }
+
+        $successfulBookings = 0;
+        $failedBookings = 0;
+        $errors = [];
+
+        // Wait for all processes to finish and collect results
+        foreach ($processes as $process) {
+            $result = $process->wait();
+            if ($result->successful()) {
+                $successfulBookings++;
+            } else {
+                $failedBookings++;
+                $errors[] = $result->errorOutput() ?: $result->output();
+            }
+        }
+
+        // Restore original env
+        putenv('DB_DATABASE=:memory:');
+
+        // 3. Assertions
+        $this->assertEquals(5, $successfulBookings, 'Only exactly 5 bookings should succeed.');
+        $this->assertEquals(5, $failedBookings, 'The remaining 5 requests must fail cleanly.');
+        
+        // Refresh product from the DB to check final stock
+        $finalStock = $product->fresh()->stock;
+        $this->assertEquals(0, $finalStock, 'Stock must strictly halt at 0 and never become negative.');
+        $this->assertGreaterThanOrEqual(0, $finalStock, 'Stock must never be negative.');
     }
 }

@@ -43,11 +43,14 @@ $order = DB::transaction(function () use ($id, $quantity, $request) {
 ```
 By wrapping the logic in `DB::transaction` and appending `->lockForUpdate()`, the database engine applies a write-lock to the specific product row. If 10 concurrent requests hit the controller, the database forces 9 of them to wait in line until the 1st request finishes its transaction. When the 2nd request is finally allowed to read the row, it sees the freshly updated stock, realizes it's empty, and cleanly fails with a 422 error.
 
-### How Concurrency Was Verified
-Because PHPUnit tests utilizing `RefreshDatabase` and SQLite `:memory:` run in isolated database environments, true external HTTP parallelism against the test database is difficult. 
-However, concurrency safety was verified via:
-1. **Automated Sequential Verification**: `ConcurrentBookingTest.php` strictly verifies the locking boundaries, ensuring that any attempt to exceed stock results in a 422 HTTP exception and stock strictly halts at 0.
-2. **Manual Load Testing**: Utilizing concurrent `curl` scripts against the live `php artisan serve` physical database confirmed that overlapping HTTP requests are correctly queued by the database lock, successfully preventing overselling.
+### Concurrency Verification
+**Challenge:** Standard PHPUnit tests execute sequentially, making it impossible to genuinely simulate overlapping concurrent requests in a single thread, and testing parallelism against an in-memory database (`:memory:`) isolates connections.
+**Solution:**
+We engineered a **genuine automated parallel test** (`ConcurrentBookingTest.php`):
+1. **Physical Testing Database**: Configured the test environment to use a dedicated physical SQLite file (`testing.sqlite`) so multiple background processes can hit the exact same database simultaneously.
+2. **True OS-Level Parallelism**: Used Laravel's `Process` component to spawn **10 independent PHP processes** simultaneously via a dedicated background Artisan command (`app:concurrent-book`).
+3. **Atomic Safety**: To guarantee safety across all DB engines (including SQLite which ignores `FOR UPDATE` read locks), the booking logic uses true atomic decrements (`UPDATE products SET stock = stock - 1 WHERE stock > 0`), paired with `lockForUpdate` for robust systems like MySQL/PostgreSQL.
+4. **Verification**: The test successfully asserts that exactly 5 out of 10 concurrent processes succeed, the remaining 5 fail cleanly with 422 errors, and the final stock halts strictly at 0, successfully preventing overselling.
 
 ---
 
