@@ -75,7 +75,7 @@ export default function ProductList() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
       </div>
     );
   }
@@ -127,16 +127,16 @@ export default function ProductList() {
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-48 bg-brand-50 flex items-center justify-center">
-                    <Package className="h-12 w-12 text-brand-200" />
+                  <div className="w-full h-48 bg-teal-50 flex items-center justify-center">
+                    <Package className="h-12 w-12 text-teal-200" />
                   </div>
                 )}
                 
                 <div className="p-6 flex flex-col flex-grow">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-brand-600 transition-colors">{product.name}</h3>
+                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-teal-600 transition-colors">{product.name}</h3>
                     {product.price && (
-                      <span className="text-lg font-bold text-brand-600">${product.price}</span>
+                      <span className="text-lg font-bold text-teal-600">${product.price}</span>
                     )}
                   </div>
                   
@@ -156,7 +156,7 @@ export default function ProductList() {
                   <button
                     onClick={() => handleBook(product.id)}
                     disabled={product.stock <= 0 || bookMutation.isPending}
-                    className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+                    className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
                   >
                     <ShoppingCart className="mr-2 h-5 w-5" />
                     {bookMutation.isPending && bookMutation.variables?.productId === product.id ? 'Booking...' : 'Book Now'}
