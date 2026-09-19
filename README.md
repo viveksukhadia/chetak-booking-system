@@ -55,28 +55,43 @@ We engineered a **genuine automated parallel test** (`ConcurrentBookingTest.php`
 ---
 
 ## Setup Instructions
+To run this project locally, ensure you have PHP, Composer, Node.js, and a local SQLite environment set up.
 
-### Prerequisites
-- PHP 8.2+
-- Composer
-- Node.js 18+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/viveksukhadia/chetak-booking-system.git
+   cd chetak-booking-system/backend
+   ```
+2. **Install Backend Dependencies:**
+   ```bash
+   composer install
+   ```
+3. **Set up Environment:**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+4. **Prepare Database:**
+   ```bash
+   # Make sure database.sqlite exists or is configured
+   touch database/database.sqlite
+   php artisan migrate --seed
+   ```
+5. **Install Frontend Dependencies & Build Assets:**
+   ```bash
+   npm install
+   npm run build
+   ```
+6. **Start the Development Server:**
+   ```bash
+   # In terminal 1: Start Laravel server
+   php artisan serve
 
-### 1. Backend Setup
-```bash
-cd backend
-composer install
-cp .env.example .env
-php artisan key:generate
-
-# Run migrations and seed 8 realistic products
-php artisan migrate:fresh --seed
-
-# Start the local development server
-php artisan serve
-```
-
-### 2. Queue Worker Setup (Required for Payment Processing)
-In a **new terminal window**, start the queue worker:
+   # In terminal 2: Start Queue worker (for the mocked payment job)
+   php artisan queue:work
+   ```
+7. **Access the Application:**
+   Open your browser and navigate to `http://localhost:8000`. The Laravel server natively serves the compiled React application.:
 ```bash
 cd backend
 php artisan queue:work

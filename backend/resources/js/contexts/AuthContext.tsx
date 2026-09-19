@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Configure axios base url and interceptors
 export const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
